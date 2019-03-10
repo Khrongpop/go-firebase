@@ -37,7 +37,7 @@ import (
 
 func main() {
 
-	SendGMToClient2("Hello from GCM", "eHScHsD-hNU:APA91bHis1hmhOpoxGTSTd09Es_Y8XIMxKoTsytR7ounjtaEMxs1yLCD9jkAgid2vc3igLKjbmtS8HU8EpsWieAHyv0KJ8wU8BZ94PKwLqsMXVltGDkm1rdNO_wyA1dPBjWgfRHRduqK")
+	// SendGMToClient2("Hello from GCM", "eHScHsD-hNU:APA91bHis1hmhOpoxGTSTd09Es_Y8XIMxKoTsytR7ounjtaEMxs1yLCD9jkAgid2vc3igLKjbmtS8HU8EpsWieAHyv0KJ8wU8BZ94PKwLqsMXVltGDkm1rdNO_wyA1dPBjWgfRHRduqK")
 
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
@@ -58,49 +58,60 @@ func main() {
 
 func SendGMToClient2(pushText string, pushToken string) {
 	serverKey := "AAAAorSWiIM:APA91bGFfAnMlIt20vocPKeNkQc1qrblrUT6Q1AgAtY4ZyV4howzavhKrgtIBzFHi89i0b2Z62qcOy6xQsKpcNpl3MsX98UkkbbP51vNcz5LRtno5Dv737rOjXgUjxmjrvWGJk-5djVl"
-	var msg gcm.HttpMessage
+	noti := gcm.Notification{
+		Title: `Muang`,
+		Body:  `bodydddd`,
+	}
+	msg := gcm.HttpMessage{}
 	data := map[string]interface{}{"message": pushText}
 	regIDs := []string{pushToken}
 	msg.RegistrationIds = regIDs
 	msg.Data = data
+	msg.Notification = &noti
 
-	response, err := gcm.SendHttp(serverKey, msg)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		// fmt.Println("Response ", response)
-		fmt.Println("Response ", response.Success)
-		fmt.Println("MessageID ", response.MessageId)
-		fmt.Println("Failure ", response.Failure)
-		fmt.Println("Error ", response.Error)
-		fmt.Println("Results ", response.Results)
-	}
+	// response, err := gcm.SendHttp(serverKey, msg)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// } else {
+	// 	// fmt.Println("Response ", response)
+	// 	fmt.Println("Response ", response.Success)
+	// 	fmt.Println("MessageID ", response.MessageId)
+	// 	fmt.Println("Failure ", response.Failure)
+	// 	fmt.Println("Error ", response.Error)
+	// 	fmt.Println("Results ", response.Results)
+	// }
+
+	gcm.SendHttp(serverKey, msg)
+
 }
 
 // SendGMToClient is a function that will push a message to client
 func SendGMToClient(c echo.Context) error {
 	serverKey := "AAAAorSWiIM:APA91bGFfAnMlIt20vocPKeNkQc1qrblrUT6Q1AgAtY4ZyV4howzavhKrgtIBzFHi89i0b2Z62qcOy6xQsKpcNpl3MsX98UkkbbP51vNcz5LRtno5Dv737rOjXgUjxmjrvWGJk-5djVl"
-	var msg gcm.HttpMessage
-	data := map[string]interface{}{"message": c.FormValue("message")}
-	regIDs := []string{c.FormValue("client_token")}
-	msg.RegistrationIds = regIDs
-	msg.Data = data
+	notification := gcm.Notification{
+		Title:       c.FormValue("title"),
+		Body:        c.FormValue("body"),
+		ClickAction: c.FormValue("clickAction"),
+	}
+	// notificationDefault := gcm.Notification{}
+	msg := gcm.HttpMessage{
+		Data:            map[string]interface{}{"message": c.FormValue("message")},
+		RegistrationIds: []string{c.FormValue("client_token")},
+		Notification:    &notification,
+	}
 	response, err := gcm.SendHttp(serverKey, msg)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
-		// fmt.Println("Response ", response)
+		fmt.Println("Response ", response)
 		fmt.Println("Response ", response.Success)
 		fmt.Println("MessageID ", response.MessageId)
 		fmt.Println("Failure ", response.Failure)
 		fmt.Println("Error ", response.Error)
 		fmt.Println("Results ", response.Results)
 	}
-	// return c.JSON(http.StatusOK, gin.H{
-	// 	"message":      c.FormValue("message"),
-	// 	"client_token": c.FormValue("client_token"),
-	// })
 
+	// return c.JSON(http.StatusOK, notificationDefault)
 	t := time.Now()
 	uuid, errUUID := newUUID()
 	if errUUID != nil {
