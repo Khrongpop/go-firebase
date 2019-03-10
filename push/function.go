@@ -2,24 +2,14 @@ package function
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
+
+	"github.com/google/go-gcm"
 )
 
 type Result struct {
 	Code    int
 	Message string
-}
-
-type Body struct {
-	Message string
-}
-
-type Noti struct {
-	Title           string `json:title`
-	Body            string `json:body`
-	ClickAction     string `json:click_action`
-	RegistrationIds string `json:regis_id`
 }
 
 const (
@@ -28,19 +18,33 @@ const (
 
 func Push(w http.ResponseWriter, r *http.Request) {
 
-	data, _ := ioutil.ReadAll(r.Body)
-	noti := Noti{}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if err := json.Unmarshal(data, &noti); err != nil {
+
+	notification := gcm.Notification{
+		Title:       r.FormValue("title"),
+		Body:        r.FormValue("body"),
+		ClickAction: r.FormValue("clickAction"),
+	}
+	msg := gcm.HttpMessage{
+		Data:            map[string]interface{}{"message": r.FormValue("message")},
+		RegistrationIds: []string{r.FormValue("client_token")},
+		Notification:    &notification,
+	}
+	_, err := gcm.SendHttp(serverKey, msg)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Result{
 			500,
 			"Internal Server Error",
 		})
 		return
-
 	} else {
-		json.NewEncoder(w).Encode(noti)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(Result{
+			200,
+			"Push Message Success",
+		})
 		return
 	}
+
 }
